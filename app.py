@@ -26,7 +26,7 @@ model = CLIPModel.from_pretrained(
     "nateraw/clip-vit-base-patch32-finetuned-fake-vs-real",
     use_auth_token=hf_token
 )
-        return processor, model
+    return processor, model
 
 processor, model = load_model()
 labels = ["real", "fake"]
