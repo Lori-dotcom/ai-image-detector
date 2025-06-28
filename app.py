@@ -18,14 +18,15 @@ uploaded_file = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg", "jpeg
 def load_model():
     hf_token = st.secrets["HF_TOKEN"]
 
-processor = CLIPProcessor.from_pretrained(
-    "nateraw/clip-vit-base-patch32-finetuned-fake-vs-real",
-    use_auth_token=hf_token
-)
-model = CLIPModel.from_pretrained(
-    "nateraw/clip-vit-base-patch32-finetuned-fake-vs-real",
-    use_auth_token=hf_token
-)
+    processor = CLIPProcessor.from_pretrained(
+        "nateraw/clip-vit-base-patch32-finetuned-fake-vs-real",
+        use_auth_token=hf_token
+    )
+    model = CLIPModel.from_pretrained(
+        "nateraw/clip-vit-base-patch32-finetuned-fake-vs-real",
+        use_auth_token=hf_token
+    )
+
     return processor, model
 
 processor, model = load_model()
