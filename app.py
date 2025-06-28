@@ -16,7 +16,7 @@ uploaded_file = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg", "jpeg
 # Load the fake-vs-real detection model from Hugging Face
 @st.cache_resource
 def load_model():
-    hf_token = st.secrets["HF_TOKEN"]
+    hf_token = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
 
     processor = CLIPProcessor.from_pretrained(
         "nateraw/clip-vit-base-patch32-finetuned-fake-vs-real",
