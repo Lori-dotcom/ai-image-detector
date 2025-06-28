@@ -1,43 +1,46 @@
 
 import streamlit as st
 from PIL import Image
-import requests
-from transformers import AutoProcessor, AutoModelForImageClassification
+from transformers import CLIPProcessor, CLIPModel
 import torch
 
 # App config
 st.set_page_config(page_title="AI Image Detector", layout="centered")
 st.title("🧠 AI Image Detector")
-st.caption("Detect whether an image is AI-generated or real using a Hugging Face model.")
+st.caption("Detect whether an image is AI-generated or real using a fine-tuned CLIP model.")
 
 # Upload section
 uploaded_file = st.file_uploader("Upload an image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
-# Load the real AI detection model from Hugging Face
+# Load the fake-vs-real detection model from Hugging Face
 @st.cache_resource
 def load_model():
-    processor = AutoProcessor.from_pretrained("microsoft/beit-base-patch16-224")
-    model = AutoModelForImageClassification.from_pretrained("microsoft/beit-base-patch16-224")
+    processor = CLIPProcessor.from_pretrained("nateraw/clip-vit-base-patch32-finetuned-fake-vs-real")
+    model = CLIPModel.from_pretrained("nateraw/clip-vit-base-patch32-finetuned-fake-vs-real")
     return processor, model
 
 processor, model = load_model()
+labels = ["real", "fake"]
 
 if uploaded_file:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Uploaded Image", use_container_width=True)
 
     with st.spinner("Analyzing image..."):
-        inputs = processor(images=image, return_tensors="pt")
+        inputs = processor(text=labels, images=image, return_tensors="pt", padding=True)
         with torch.no_grad():
             outputs = model(**inputs)
-            logits = outputs.logits
-            predicted_class = logits.argmax(-1).item()
-            score = torch.nn.functional.softmax(logits, dim=-1).max().item() * 100
+            logits_per_image = outputs.logits_per_image
+            probs = logits_per_image.softmax(dim=1).squeeze()
 
-        label = model.config.id2label[predicted_class]
-        st.markdown(f"### 🔎 Result: {label}")
-        st.progress(int(score))
-        st.caption(f"Confidence Score: {score:.2f}%")
+        predicted_idx = torch.argmax(probs).item()
+        label = labels[predicted_idx]
+        confidence = probs[predicted_idx].item() * 100
+
+        emoji = "🟢" if label == "real" else "🔴"
+        st.markdown(f"### {emoji} Result: {label.upper()}")
+        st.progress(int(confidence))
+        st.caption(f"Confidence Score: {confidence:.2f}%")
 
 st.markdown("---")
 st.markdown("© 2025 AI Media Guard | Powered by Hugging Face")
